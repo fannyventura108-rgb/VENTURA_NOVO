@@ -16,7 +16,10 @@
       )
     : null;
 
+  const WHATSAPP_NUMBER = '5566992923000';
+
   const $ = selector => document.querySelector(selector);
+
   const money = value => Number(value || 0).toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL'
@@ -41,6 +44,7 @@
 
   function setBusy(button, busy, original = 'Salvar') {
     if (!button) return;
+
     button.disabled = busy;
     button.dataset.originalText ||= button.textContent || original;
     button.textContent = busy ? 'Aguarde...' : button.dataset.originalText;
@@ -52,8 +56,12 @@
     const bookingHost = $('#booking-services');
 
     if (!connected) {
-      if (host) host.innerHTML = '<p class="muted">Conexão com o banco não configurada.</p>';
-      if (bookingHost) bookingHost.innerHTML = '<p class="muted">Serviços indisponíveis.</p>';
+      if (host) {
+        host.innerHTML = '<p class="muted">Conexão com o banco não configurada.</p>';
+      }
+      if (bookingHost) {
+        bookingHost.innerHTML = '<p class="muted">Serviços indisponíveis.</p>';
+      }
       return;
     }
 
@@ -65,8 +73,13 @@
 
     if (error) {
       console.error('Erro ao carregar serviços:', error);
-      if (host) host.innerHTML = '<p class="muted">Não foi possível carregar os serviços.</p>';
-      if (bookingHost) bookingHost.innerHTML = '<p class="muted">Não foi possível carregar as opções.</p>';
+
+      if (host) {
+        host.innerHTML = '<p class="muted">Não foi possível carregar os serviços.</p>';
+      }
+      if (bookingHost) {
+        bookingHost.innerHTML = '<p class="muted">Não foi possível carregar as opções.</p>';
+      }
       return;
     }
 
@@ -117,7 +130,10 @@
     );
 
     const output = $('#booking-total');
-    if (output) output.textContent = money(total);
+
+    if (output) {
+      output.textContent = money(total);
+    }
   }
 
   $('#booking-services')?.addEventListener('change', updateBookingTotal);
@@ -127,7 +143,11 @@
     event.preventDefault();
 
     if (!connected) {
-      feedback('#booking-feedback', 'Sistema sem conexão com o banco de dados.', true);
+      feedback(
+        '#booking-feedback',
+        'Sistema sem conexão com o banco de dados.',
+        true
+      );
       return;
     }
 
@@ -145,10 +165,16 @@
       '#booking-services input[name="service_ids"]:checked'
     )].map(input => input.value);
 
-    const chosen = services.filter(service => ids.includes(String(service.id)));
+    const chosen = services.filter(
+      service => ids.includes(String(service.id))
+    );
 
     if (!customerName || !phone || !date || !time || !chosen.length) {
-      feedback('#booking-feedback', 'Preencha os dados e selecione pelo menos um serviço.', true);
+      feedback(
+        '#booking-feedback',
+        'Preencha os dados e selecione pelo menos um serviço.',
+        true
+      );
       return;
     }
 
@@ -175,15 +201,46 @@
       status: 'pending'
     };
 
-    setBusy(button, true);
+    // Abre uma janela durante o clique para evitar bloqueio do navegador.
+    // O endereço do WhatsApp só será carregado após salvar o agendamento.
+    let whatsappWindow = null;
 
-    const { error } = await db.from('bookings').insert(payload);
+    try {
+      whatsappWindow = window.open('about:blank', '_blank');
+
+      if (whatsappWindow) {
+        whatsappWindow.opener = null;
+      }
+    } catch (error) {
+      console.warn('Não foi possível abrir uma nova janela:', error);
+    }
+
+    setBusy(button, true);
+    feedback('#booking-feedback', 'Salvando sua solicitação...');
+
+    let result;
+
+    try {
+      result = await db.from('bookings').insert(payload);
+    } catch (error) {
+      console.error('Erro ao salvar agendamento:', error);
+      result = { error };
+    }
 
     setBusy(button, false);
 
-    if (error) {
-      console.error('Erro ao salvar agendamento:', error);
-      feedback('#booking-feedback', 'Não foi possível enviar. Verifique os dados e tente novamente.', true);
+    if (result.error) {
+      console.error('Erro ao salvar agendamento:', result.error);
+
+      if (whatsappWindow && !whatsappWindow.closed) {
+        whatsappWindow.close();
+      }
+
+      feedback(
+        '#booking-feedback',
+        'Não foi possível enviar. Verifique os dados e tente novamente.',
+        true
+      );
       return;
     }
 
@@ -201,14 +258,26 @@
       'Aguardo a confirmação do horário.'
     ].join('\n');
 
-    feedback('#booking-feedback', 'Solicitação salva! Abrindo o WhatsApp...');
+    const whatsappUrl =
+      'https://wa.me/' +
+      WHATSAPP_NUMBER +
+      '?text=' +
+      encodeURIComponent(message);
+
+    feedback(
+      '#booking-feedback',
+      'Agendamento salvo com sucesso! Abrindo o WhatsApp...'
+    );
+
     form.reset();
     updateBookingTotal();
 
-    window.open(
-      'https://wa.me/5566992923000?text=' + encodeURIComponent(message),
-      '_blank'
-    );
+    if (whatsappWindow && !whatsappWindow.closed) {
+      whatsappWindow.location.href = whatsappUrl;
+    } else {
+      // Alternativa caso o navegador bloqueie a nova janela.
+      window.location.href = whatsappUrl;
+    }
   });
 
   // LOGIN ADMINISTRATIVO
@@ -216,7 +285,11 @@
     event.preventDefault();
 
     if (!connected) {
-      feedback('#login-feedback', 'Conexão com o banco não configurada.', true);
+      feedback(
+        '#login-feedback',
+        'Conexão com o banco não configurada.',
+        true
+      );
       return;
     }
 
@@ -257,7 +330,12 @@
 
     if (error || !admin) {
       await db.auth.signOut();
-      feedback('#login-feedback', 'Esta conta não possui permissão administrativa.', true);
+
+      feedback(
+        '#login-feedback',
+        'Esta conta não possui permissão administrativa.',
+        true
+      );
       return;
     }
 
@@ -280,7 +358,9 @@
         </thead>
         <tbody>
           ${rows.length
-            ? rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')
+            ? rows.map(row => `
+                <tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>
+              `).join('')
             : `<tr><td colspan="${headers.length}">Nenhum registro encontrado.</td></tr>`
           }
         </tbody>
@@ -291,6 +371,7 @@
   // AGENDAMENTOS
   async function loadBookings() {
     const host = $('#booking-list');
+
     if (!host || !connected) return;
 
     const { data, error } = await db
@@ -314,8 +395,17 @@
         escapeHtml(booking.booking_time || ''),
         escapeHtml(booking.status),
         `
-          <button type="button" class="small-btn" data-confirm="${escapeHtml(booking.id)}">Confirmar</button>
-          <button type="button" class="small-btn" data-cancel="${escapeHtml(booking.id)}">Cancelar</button>
+          <button
+            type="button"
+            class="small-btn"
+            data-confirm="${escapeHtml(booking.id)}"
+          >Confirmar</button>
+
+          <button
+            type="button"
+            class="small-btn"
+            data-cancel="${escapeHtml(booking.id)}"
+          >Cancelar</button>
         `
       ])
     );
@@ -323,6 +413,7 @@
 
   $('#booking-list')?.addEventListener('click', async event => {
     const button = event.target.closest('[data-confirm], [data-cancel]');
+
     if (!button || !connected) return;
 
     const id = button.dataset.confirm || button.dataset.cancel;
@@ -347,6 +438,7 @@
   // GERENCIAMENTO DE SERVIÇOS
   async function loadAdminServices() {
     const host = $('#admin-service-list');
+
     if (!host || !connected) return;
 
     const { data, error } = await db
@@ -372,6 +464,7 @@
             class="small-btn"
             data-edit-service="${escapeHtml(service.id)}"
           >Editar</button>
+
           <button
             type="button"
             class="small-btn"
@@ -395,7 +488,11 @@
     const price = Number(data.get('price'));
 
     if (!name || !Number.isFinite(price) || price < 0) {
-      feedback('#service-feedback', 'Informe um nome e um preço válido.', true);
+      feedback(
+        '#service-feedback',
+        'Informe um nome e um preço válido.',
+        true
+      );
       return;
     }
 
@@ -410,12 +507,21 @@
 
     if (error) {
       console.error(error);
-      feedback('#service-feedback', 'Não foi possível adicionar o serviço.', true);
+      feedback(
+        '#service-feedback',
+        'Não foi possível adicionar o serviço.',
+        true
+      );
       return;
     }
 
     form.reset();
-    feedback('#service-feedback', 'Serviço adicionado com sucesso!');
+
+    feedback(
+      '#service-feedback',
+      'Serviço adicionado com sucesso!'
+    );
+
     await loadServices();
     await loadAdminServices();
   });
@@ -429,12 +535,15 @@
 
     if (editButton) {
       const service = await getService(editButton.dataset.editService);
+
       if (!service) return;
 
       const newName = prompt('Nome do serviço:', service.name);
+
       if (newName === null) return;
 
       const newPrice = prompt('Preço do serviço:', service.price);
+
       if (newPrice === null) return;
 
       const name = newName.trim();
@@ -506,6 +615,7 @@
   // VENDAS
   async function loadSales() {
     const host = $('#sales-list');
+
     if (!host || !connected) return;
 
     const { data, error } = await db
@@ -536,11 +646,17 @@
 
     const form = event.currentTarget;
     const data = new FormData(form);
+
     const description = String(data.get('description') || '').trim();
     const amount = Number(data.get('amount'));
     const saleDate = data.get('sale_date');
 
-    if (!description || !Number.isFinite(amount) || amount <= 0 || !saleDate) {
+    if (
+      !description ||
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      !saleDate
+    ) {
       alert('Preencha todos os dados da venda corretamente.');
       return;
     }
@@ -576,14 +692,19 @@
       });
 
       document.querySelectorAll('.tab-panel').forEach(panel => {
-        panel.classList.toggle('hidden', panel.id !== button.dataset.tab);
+        panel.classList.toggle(
+          'hidden',
+          panel.id !== button.dataset.tab
+        );
       });
     });
   });
 
   // SAIR
   $('#logout')?.addEventListener('click', async () => {
-    if (connected) await db.auth.signOut();
+    if (connected) {
+      await db.auth.signOut();
+    }
 
     $('#dashboard')?.classList.add('hidden');
     $('#login-panel')?.classList.remove('hidden');
