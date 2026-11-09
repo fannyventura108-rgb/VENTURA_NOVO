@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -5,88 +6,226 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
   <meta name="description" content="Ventura — agendamentos e gestão de atendimentos.">
+
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+
   <title>VENTURA 2.0</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script defer src="app.js"></script>
+
+  <style>
+    /* ADMINISTRAÇÃO ESCONDIDA NA PÁGINA PRINCIPAL */
+    .admin {
+      display: none;
+    }
+
+    .admin:target {
+      display: block;
+    }
+
+    .admin-link {
+      border: 1px solid var(--gold);
+      padding: 9px 14px;
+      color: var(--gold);
+      border-radius: 3px;
+    }
+
+    .admin-link:hover {
+      background: var(--gold);
+      color: #17130c;
+    }
+  </style>
 </head>
+
 <body>
+
   <header class="topbar">
-    <a class="brand" href="#inicio"><span class="brand-mark">V</span><span>VENTURA<small>BEAUTY STUDIO</small></span></a>
-    <nav><a href="#agendar">Agendar</a><a href="#servicos">Serviços</a><a href="#admin">Área administrativa</a></nav>
+    <a class="brand" href="#inicio">
+      <span class="brand-mark">V</span>
+      <span>VENTURA<small>BEAUTY STUDIO</small></span>
+    </a>
+
+    <nav>
+      <a href="#agendar">Agendar</a>
+      <a href="#servicos">Serviços</a>
+      <a href="#admin" class="admin-link">Administração</a>
+    </nav>
   </header>
+
   <main>
+
     <section class="hero" id="inicio">
       <div class="hero-copy">
         <p class="eyebrow">BELEZA • CUIDADO • SOFISTICAÇÃO</p>
         <h1>Seu momento.<br><em>Seu estilo.</em></h1>
-        <p class="muted">Agende seu horário de forma simples e acompanhe os serviços Ventura.</p>
+        <p class="muted">
+          Agende seu horário de forma simples e acompanhe os serviços Ventura.
+        </p>
         <a class="btn gold" href="#agendar">Solicitar agendamento</a>
       </div>
-      <div class="hero-seal"><span>V</span><small>VENTURA<br>NAIL STUDIO</small></div>
+
+      <div class="hero-seal">
+        <span>V</span>
+        <small>VENTURA<br>NAIL STUDIO</small>
+      </div>
     </section>
 
     <section class="section" id="servicos">
-      <div class="section-heading"><p class="eyebrow">NOSSO MENU</p><h2>Serviços</h2></div>
-      <div id="service-list" class="service-grid"><p class="muted">Configure a conexão para carregar os serviços.</p></div>
+      <div class="section-heading">
+        <p class="eyebrow">NOSSO MENU</p>
+        <h2>Serviços</h2>
+      </div>
+
+      <div id="service-list" class="service-grid">
+        <p class="muted">Configure a conexão para carregar os serviços.</p>
+      </div>
     </section>
 
     <section class="section booking" id="agendar">
-      <div class="section-heading"><p class="eyebrow">RESERVE SEU MOMENTO</p><h2>Solicitar horário</h2></div>
+      <div class="section-heading">
+        <p class="eyebrow">RESERVE SEU MOMENTO</p>
+        <h2>Solicitar horário</h2>
+      </div>
+
       <form id="booking-form" class="form-card">
-        <label>Nome completo<input name="customer_name" required maxlength="100" placeholder="Seu nome"></label>
-        <label>WhatsApp<input name="customer_phone" required maxlength="20" placeholder="(66) 99999-9999"></label>
-       <div class="service-selection">
-  <label>Escolha os serviços desejados</label>
-  <div id="booking-services"></div>
-  <p>Total: <strong id="booking-total">R$ 0,00</strong></p>
-</div>
-        <div class="form-row">
-          <label>Data desejada<input type="date" name="booking_date" required></label>
-          <label>Horário desejado<input type="time" name="booking_time" required></label>
+
+        <label>
+          Nome completo
+          <input name="customer_name" required maxlength="100" placeholder="Seu nome">
+        </label>
+
+        <label>
+          WhatsApp
+          <input name="customer_phone" required maxlength="20" placeholder="(66) 99999-9999">
+        </label>
+
+        <div class="service-selection">
+          <label>Escolha os serviços desejados</label>
+          <div id="booking-services"></div>
+          <p>Total: <strong id="booking-total">R$ 0,00</strong></p>
         </div>
-        <label>Observações<textarea name="notes" rows="3" maxlength="500" placeholder="Alguma informação importante?"></textarea></label>
+
+        <div class="form-row">
+          <label>
+            Data desejada
+            <input type="date" name="booking_date" required>
+          </label>
+
+          <label>
+            Horário desejado
+            <input type="time" name="booking_time" required>
+          </label>
+        </div>
+
+        <label>
+          Observações
+          <textarea name="notes" rows="3" maxlength="500" placeholder="Alguma informação importante?"></textarea>
+        </label>
+
         <button class="btn gold" type="submit">Enviar solicitação</button>
+
         <p id="booking-feedback" class="feedback" aria-live="polite"></p>
-        <p class="fineprint">O horário será confirmado após análise. O envio não garante reserva automática.</p>
+
+        <p class="fineprint">
+          O horário será confirmado após análise. O envio não garante reserva automática.
+        </p>
+
       </form>
     </section>
 
+    <!-- ÁREA ADMINISTRATIVA: EXIBIDA SOMENTE AO CLICAR NO MENU -->
+
     <section class="section admin" id="admin">
-      <div class="section-heading"><p class="eyebrow">GESTÃO VENTURA</p><h2>Painel administrativo</h2></div>
+
+      <div class="section-heading">
+        <p class="eyebrow">GESTÃO VENTURA</p>
+        <h2>Painel administrativo</h2>
+      </div>
+
       <div id="login-panel" class="form-card">
         <p class="muted">Acesso exclusivo da administração.</p>
+
         <form id="login-form">
-          <label>E-mail<input name="email" type="email" required autocomplete="username"></label>
-          <label>Senha<input name="password" type="password" required autocomplete="current-password"></label>
+          <label>
+            E-mail
+            <input name="email" type="email" required autocomplete="username">
+          </label>
+
+          <label>
+            Senha
+            <input name="password" type="password" required autocomplete="current-password">
+          </label>
+
           <button class="btn gold" type="submit">Entrar</button>
+
           <p id="login-feedback" class="feedback" aria-live="polite"></p>
         </form>
       </div>
+
       <div id="dashboard" class="dashboard hidden">
-        <div class="dash-head"><div><p class="eyebrow">VISÃO GERAL</p><h3>Agenda e gestão</h3></div><button id="logout" class="btn outline">Sair</button></div>
+
+        <div class="dash-head">
+          <div>
+            <p class="eyebrow">VISÃO GERAL</p>
+            <h3>Agenda e gestão</h3>
+          </div>
+
+          <button id="logout" class="btn outline">Sair</button>
+        </div>
+
         <div class="tabs" role="tablist">
           <button class="tab active" data-tab="appointments">Agendamentos</button>
           <button class="tab" data-tab="services-admin">Serviços</button>
           <button class="tab" data-tab="sales">Vendas</button>
         </div>
-        <section id="appointments" class="tab-panel"><div class="panel-title"><h3>Solicitações</h3><button id="refresh-bookings" class="btn outline">Atualizar</button></div><div id="booking-list" class="table-wrap"></div></section>
+
+        <section id="appointments" class="tab-panel">
+          <div class="panel-title">
+            <h3>Solicitações</h3>
+            <button id="refresh-bookings" class="btn outline">Atualizar</button>
+          </div>
+
+          <div id="booking-list" class="table-wrap"></div>
+        </section>
+
         <section id="services-admin" class="tab-panel hidden">
           <h3>Gerenciar serviços</h3>
-          <form id="service-form" class="inline-form"><input name="name" required placeholder="Nome do serviço"><input name="price" type="number" min="0" step=".01" required placeholder="Preço (R$)"><button class="btn gold">Adicionar</button></form>
+
+          <form id="service-form" class="inline-form">
+            <input name="name" required placeholder="Nome do serviço">
+            <input name="price" type="number" min="0" step=".01" required placeholder="Preço (R$)">
+            <button class="btn gold">Adicionar</button>
+          </form>
+
           <div id="admin-service-list" class="table-wrap"></div>
         </section>
+
         <section id="sales" class="tab-panel hidden">
           <h3>Registrar venda</h3>
-          <form id="sale-form" class="inline-form"><input name="description" required placeholder="Descrição"><input name="amount" type="number" min=".01" step=".01" required placeholder="Valor (R$)"><input name="sale_date" type="date" required><button class="btn gold">Salvar venda</button></form>
+
+          <form id="sale-form" class="inline-form">
+            <input name="description" required placeholder="Descrição">
+            <input name="amount" type="number" min=".01" step=".01" required placeholder="Valor (R$)">
+            <input name="sale_date" type="date" required>
+            <button class="btn gold">Salvar venda</button>
+          </form>
+
           <div id="sales-list" class="table-wrap"></div>
         </section>
+
       </div>
     </section>
+
   </main>
-  <footer><span>VENTURA 2.0</span><span>BEAUTY STUDIO</span></footer>
+
+  <footer>
+    <span>VENTURA 2.0</span>
+    <span>BEAUTY STUDIO</span>
+  </footer>
+
 </body>
 </html>
