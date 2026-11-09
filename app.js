@@ -16,15 +16,15 @@
       )
     : null;
 
-  const $ = (selector) => document.querySelector(selector);
+  const $ = selector => document.querySelector(selector);
 
-  const money = (value) =>
+  const money = value =>
     Number(value || 0).toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     });
 
-  const escapeHtml = (value) =>
+  const escapeHtml = value =>
     String(value ?? '').replace(/[&<>"']/g, char => ({
       '&': '&amp;',
       '<': '&lt;',
@@ -35,7 +35,6 @@
 
   const feedback = (selector, message, error = false) => {
     const element = $(selector);
-
     if (!element) return;
 
     element.textContent = message;
@@ -44,15 +43,15 @@
 
   let services = [];
 
-  // SERVIÇOS DISPONÍVEIS
+  // CARREGAR SERVIÇOS
   async function loadServices() {
     const host = $('#service-list');
-    const selection = $('#booking-services');
+    const select = $('#booking-service');
 
     if (!ready) {
       if (host) {
         host.innerHTML =
-          '<p class="muted">Conexão com o banco ainda não configurada.</p>';
+          '<p class="muted">Conexão ainda não configurada.</p>';
       }
       return;
     }
@@ -64,11 +63,12 @@
       .order('name');
 
     if (error) {
+      console.error(error);
+
       if (host) {
         host.innerHTML =
           '<p class="muted">Não foi possível carregar os serviços.</p>';
       }
-      console.error(error);
       return;
     }
 
@@ -85,59 +85,18 @@
         : '<p class="muted">Nenhum serviço cadastrado.</p>';
     }
 
-    if (selection) {
-      selection.innerHTML = services.length
-        ? services.map(service => `
-            <label class="service-option">
-              <span>
-                <input
-                  type="checkbox"
-                  name="service_ids"
-                  value="${escapeHtml(service.id)}"
-                  data-price="${Number(service.price)}"
-                >
-                ${escapeHtml(service.name)}
-              </span>
-              <strong>${money(service.price)}</strong>
-            </label>
-          `).join('')
-        : '<p class="muted">Nenhum serviço disponível.</p>';
-
-      selection.addEventListener('change', updateTotal);
-    }
-
-    updateTotal();
-  }
-
-  // CALCULAR TOTAL
-  function getSelectedServices() {
-    const selected = Array.from(
-      document.querySelectorAll(
-        '#booking-services input[name="service_ids"]:checked'
-      )
-    );
-
-    return selected
-      .map(input => services.find(service => service.id === input.value))
-      .filter(Boolean);
-  }
-
-  function updateTotal() {
-    const chosen = getSelectedServices();
-
-    const total = chosen.reduce(
-      (sum, service) => sum + Number(service.price || 0),
-      0
-    );
-
-    const display = $('#booking-total');
-
-    if (display) {
-      display.textContent = money(total);
+    if (select) {
+      select.innerHTML =
+        '<option value="">Selecione um serviço</option>' +
+        services.map(service => `
+          <option value="${escapeHtml(service.id)}">
+            ${escapeHtml(service.name)} — ${money(service.price)}
+          </option>
+        `).join('');
     }
   }
 
-  // ENVIAR AGENDAMENTO
+  // AGENDAMENTO
   const bookingForm = $('#booking-form');
 
   if (bookingForm) {
@@ -164,44 +123,33 @@
         data.get('customer_phone') || ''
       ).trim();
 
-      const chosen = getSelectedServices();
-
-      if (!chosen.length) {
-        feedback(
-          '#booking-feedback',
-          'Selecione pelo menos um serviço.',
-          true
-        );
-        return;
-      }
-
-      if (!customerName || !phone) {
-        feedback(
-          '#booking-feedback',
-          'Preencha seu nome e WhatsApp.',
-          true
-        );
-        return;
-      }
-
-      const total = chosen.reduce(
-        (sum, service) => sum + Number(service.price || 0),
-        0
+      const serviceId = String(
+        data.get('service_id') || ''
       );
 
-      const names = chosen
-        .map(service => service.name)
-        .join(', ');
+      const selectedService = services.find(
+        service => service.id === serviceId
+      );
 
-      const firstService = chosen[0];
+      if (!selectedService) {
+        feedback(
+          '#booking-feedback',
+          'Selecione um serviço disponível.',
+          true
+        );
+        return;
+      }
 
+      const total = Number(selectedService.price || 0);
+
+      // Campos compatíveis com o banco atual
       const payload = {
         customer_name: customerName,
         customer_phone: phone,
         phone: phone,
-        service_id: firstService.id,
-        service_name: names,
-        service_ids: chosen.map(service => service.id),
+        service_id: selectedService.id,
+        service_name: selectedService.name,
+        service_ids: [selectedService.id],
         service_total: total,
         price: total,
         booking_date: data.get('booking_date'),
@@ -210,13 +158,13 @@
         status: 'pending'
       };
 
-      const submitButton = form.querySelector(
+      const button = form.querySelector(
         'button[type="submit"]'
       );
 
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Enviando...';
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Enviando...';
       }
 
       const { error } = await client
@@ -224,17 +172,17 @@
         .insert(payload);
 
       if (error) {
-        console.error('Erro ao salvar agendamento:', error);
+        console.error('Erro no agendamento:', error);
 
         feedback(
           '#booking-feedback',
-          'Não foi possível enviar. Verifique os dados e tente novamente.',
+          'Não foi possível enviar. Tente novamente.',
           true
         );
 
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Enviar solicitação';
+        if (button) {
+          button.disabled = false;
+          button.textContent = 'Enviar solicitação';
         }
 
         return;
@@ -250,30 +198,27 @@
         '',
         `Nome: ${customerName}`,
         `WhatsApp: ${phone}`,
-        `Serviços: ${names}`,
-        `Total: ${money(total)}`,
+        `Serviço: ${selectedService.name}`,
+        `Valor: ${money(total)}`,
         `Data desejada: ${payload.booking_date}`,
         `Horário desejado: ${payload.booking_time}`,
         `Observações: ${payload.notes || 'Nenhuma'}`
       ].join('\n');
 
       form.reset();
-      updateTotal();
 
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Enviar solicitação';
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Enviar solicitação';
       }
 
-      const whatsapp =
+      window.location.href =
         'https://wa.me/5566992923000?text=' +
         encodeURIComponent(message);
-
-      window.location.href = whatsapp;
     });
   }
 
-  // LOGIN ADMINISTRATIVO
+  // LOGIN
   const loginForm = $('#login-form');
 
   if (loginForm) {
@@ -283,7 +228,7 @@
       if (!ready) {
         feedback(
           '#login-feedback',
-          'Configure a conexão com o banco primeiro.',
+          'Configure a conexão primeiro.',
           true
         );
         return;
@@ -311,7 +256,7 @@
     });
   }
 
-  // VERIFICAR ACESSO ADMINISTRATIVO
+  // VERIFICAR ADMINISTRADOR
   async function showDashboard() {
     if (!ready) return;
 
@@ -373,7 +318,7 @@
     `;
   }
 
-  // CARREGAR AGENDAMENTOS
+  // AGENDAMENTOS ADMINISTRATIVOS
   async function loadBookings() {
     const host = $('#booking-list');
 
@@ -428,40 +373,36 @@
     );
   }
 
-  // CONFIRMAR OU CANCELAR AGENDAMENTO
-  const bookingList = $('#booking-list');
+  // CONFIRMAR E CANCELAR
+  $('#booking-list')?.addEventListener('click', async event => {
+    const button = event.target.closest(
+      '[data-confirm], [data-cancel]'
+    );
 
-  if (bookingList) {
-    bookingList.addEventListener('click', async event => {
-      const button = event.target.closest(
-        '[data-confirm], [data-cancel]'
-      );
+    if (!button || !ready) return;
 
-      if (!button || !ready) return;
+    const id =
+      button.dataset.confirm || button.dataset.cancel;
 
-      const id =
-        button.dataset.confirm || button.dataset.cancel;
+    const status = button.dataset.confirm
+      ? 'confirmed'
+      : 'cancelled';
 
-      const status = button.dataset.confirm
-        ? 'confirmed'
-        : 'cancelled';
+    const { error } = await client
+      .from('bookings')
+      .update({ status })
+      .eq('id', id);
 
-      const { error } = await client
-        .from('bookings')
-        .update({ status })
-        .eq('id', id);
+    if (error) {
+      console.error(error);
+      alert('Não foi possível atualizar o agendamento.');
+      return;
+    }
 
-      if (error) {
-        console.error(error);
-        alert('Não foi possível atualizar o agendamento.');
-        return;
-      }
+    await loadBookings();
+  });
 
-      await loadBookings();
-    });
-  }
-
-  // SERVIÇOS NO ADMINISTRATIVO
+  // SERVIÇOS ADMINISTRATIVOS
   async function loadAdminServices() {
     const host = $('#admin-service-list');
 
@@ -489,38 +430,35 @@
   }
 
   // ADICIONAR SERVIÇO
-  const serviceForm = $('#service-form');
+  $('#service-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
 
-  if (serviceForm) {
-    serviceForm.addEventListener('submit', async event => {
-      event.preventDefault();
+    if (!ready) return;
 
-      if (!ready) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
 
-      const data = new FormData(event.currentTarget);
+    const { error } = await client
+      .from('services')
+      .insert({
+        name: String(data.get('name') || '').trim(),
+        price: Number(data.get('price')),
+        active: true
+      });
 
-      const { error } = await client
-        .from('services')
-        .insert({
-          name: String(data.get('name') || '').trim(),
-          price: Number(data.get('price')),
-          active: true
-        });
+    if (error) {
+      console.error(error);
+      alert('Não foi possível adicionar o serviço.');
+      return;
+    }
 
-      if (error) {
-        console.error(error);
-        alert('Não foi possível adicionar o serviço.');
-        return;
-      }
+    form.reset();
 
-      event.currentTarget.reset();
+    await loadServices();
+    await loadAdminServices();
+  });
 
-      await loadServices();
-      await loadAdminServices();
-    });
-  }
-
-  // CARREGAR VENDAS
+  // VENDAS
   async function loadSales() {
     const host = $('#sales-list');
 
@@ -548,43 +486,39 @@
   }
 
   // SALVAR VENDA
-  const saleForm = $('#sale-form');
+  $('#sale-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
 
-  if (saleForm) {
-    saleForm.addEventListener('submit', async event => {
-      event.preventDefault();
+    if (!ready) return;
 
-      if (!ready) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
 
-      const data = new FormData(event.currentTarget);
+    const { error } = await client
+      .from('sales')
+      .insert({
+        description: String(data.get('description') || '').trim(),
+        amount: Number(data.get('amount')),
+        sale_date: data.get('sale_date')
+      });
 
-      const { error } = await client
-        .from('sales')
-        .insert({
-          description: String(data.get('description') || '').trim(),
-          amount: Number(data.get('amount')),
-          sale_date: data.get('sale_date')
-        });
+    if (error) {
+      console.error(error);
+      alert('Não foi possível salvar a venda.');
+      return;
+    }
 
-      if (error) {
-        console.error(error);
-        alert('Não foi possível salvar a venda.');
-        return;
-      }
+    form.reset();
+    await loadSales();
+  });
 
-      event.currentTarget.reset();
-
-      await loadSales();
-    });
-  }
-
-  // BOTÃO ATUALIZAR AGENDA
+  // ATUALIZAR AGENDAMENTOS
   $('#refresh-bookings')?.addEventListener(
     'click',
     loadBookings
   );
 
-  // SAIR DA ADMINISTRAÇÃO
+  // SAIR
   $('#logout')?.addEventListener('click', async () => {
     if (ready) {
       await client.auth.signOut();
@@ -594,7 +528,7 @@
     $('#login-panel')?.classList.remove('hidden');
   });
 
-  // ABAS ADMINISTRATIVAS
+  // ABAS
   document.querySelectorAll('.tab').forEach(button => {
     button.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(tab => {
