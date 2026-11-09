@@ -157,6 +157,7 @@
       service_name: names,
       service_ids: chosen.map(s => s.id),
       service_total: total,
+      price: total,
       booking_date: f.get('booking_date'),
       booking_time: f.get('booking_time'),
       notes: String(f.get('notes') || '').trim(),
