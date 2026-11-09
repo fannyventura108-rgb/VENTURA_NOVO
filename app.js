@@ -19,8 +19,17 @@
   function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   $('#booking-form').addEventListener('submit',async e=>{
     e.preventDefault(); if(!ready){feedback('#booking-feedback','Sistema ainda não conectado ao banco de dados.',true);return;}
-    const f=new FormData(e.currentTarget), payload={customer_name:f.get('customer_name').trim(),customer_phone:f.get('customer_phone').trim(),service_id:f.get('service_id'),booking_date:f.get('booking_date'),booking_time:f.get('booking_time'),notes:f.get('notes').trim(),status:'pending'};
-    const {error}=await client.from('bookings').insert(payload);
+    const f=new FormData(e.currentTarget), payload={
+  customer_name:f.get('customer_name').trim(),
+  customer_phone:f.get('customer_phone').trim(),
+  phone:f.get('customer_phone').trim(),
+  service_id:f.get('service_id'),
+  booking_date:f.get('booking_date'),
+  booking_time:f.get('booking_time'),
+  notes:f.get('notes').trim(),
+  status:'pending'
+};
+const {error}=await client.from('bookings').insert(payload);
 if(error){
   feedback('#booking-feedback','Erro do Supabase: '+error.message,true);
   return;
