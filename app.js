@@ -21,7 +21,10 @@
     e.preventDefault(); if(!ready){feedback('#booking-feedback','Sistema ainda não conectado ao banco de dados.',true);return;}
     const f=new FormData(e.currentTarget), payload={customer_name:f.get('customer_name').trim(),customer_phone:f.get('customer_phone').trim(),service_id:f.get('service_id'),booking_date:f.get('booking_date'),booking_time:f.get('booking_time'),notes:f.get('notes').trim(),status:'pending'};
     const {error}=await client.from('bookings').insert(payload);
-    if(error){feedback('#booking-feedback','Não foi possível enviar. Confira os dados e tente novamente.',true);return;}
+if(error){
+  feedback('#booking-feedback','Erro do Supabase: '+error.message,true);
+  return;
+}
     e.currentTarget.reset();feedback('#booking-feedback','Solicitação enviada! Aguarde a confirmação pelo WhatsApp.');
   });
   $('#login-form').addEventListener('submit',async e=>{
