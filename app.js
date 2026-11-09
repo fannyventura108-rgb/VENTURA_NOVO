@@ -1,6 +1,7 @@
 
 (() => {
   const cfg = window.VENTURA_CONFIG || {};
+
   const ready = Boolean(
     cfg.SUPABASE_URL &&
     cfg.SUPABASE_ANON_KEY &&
@@ -15,6 +16,7 @@
     : null;
 
   const $ = (s) => document.querySelector(s);
+
   const money = (v) =>
     Number(v || 0).toLocaleString('pt-BR', {
       style: 'currency',
@@ -51,8 +53,10 @@
 
   function updateBookingTotal() {
     const chosen = selectedServices();
+
     const total = chosen.reduce(
-      (sum, s) => sum + Number(s.price || 0), 0
+      (sum, s) => sum + Number(s.price || 0),
+      0
     );
 
     $('#booking-total').textContent = money(total);
@@ -77,7 +81,10 @@
     if (error) {
       host.innerHTML =
         '<p class="muted">Não foi possível carregar os serviços.</p>';
-      bookingHost.textContent = 'Erro ao carregar serviços.';
+
+      bookingHost.textContent =
+        'Erro ao carregar serviços.';
+
       return;
     }
 
@@ -113,6 +120,7 @@
     updateBookingTotal
   );
 
+  // ENVIO DE AGENDAMENTO
   $('#booking-form').addEventListener('submit', async e => {
     e.preventDefault();
 
@@ -139,7 +147,8 @@
     }
 
     const total = chosen.reduce(
-      (sum, s) => sum + Number(s.price || 0), 0
+      (sum, s) => sum + Number(s.price || 0),
+      0
     );
 
     const names = chosen.map(s => s.name).join(', ');
@@ -150,21 +159,32 @@
     ).trim();
 
     const payload = {
-      customer_name: String(f.get('customer_name') || '').trim(),
+      customer_name: String(
+        f.get('customer_name') || ''
+      ).trim(),
+
       customer_phone: phone,
       phone: phone,
+
       service_id: firstService.id,
       service_name: names,
       service_ids: chosen.map(s => s.id),
+
       service_total: total,
       price: total,
+
       booking_date: f.get('booking_date'),
       booking_time: f.get('booking_time'),
-      notes: String(f.get('notes') || '').trim(),
+
+      notes: String(
+        f.get('notes') || ''
+      ).trim(),
+
       status: 'pending'
     };
 
     const button = form.querySelector('[type="submit"]');
+
     button.disabled = true;
     button.textContent = 'Enviando...';
 
@@ -185,28 +205,34 @@
     }
 
     const message = [
-  'Olá! Gostaria de confirmar meu agendamento na Ventura Beauty Studio.',
-  '',
-  'Nome: ' + payload.customer_name,
-  'Serviços: ' + payload.service_name,
-  'Valor total: R$ ' + Number(payload.price).toFixed(2).replace('.', ','),
-  'Data: ' + payload.booking_date,
-  'Horário: ' + payload.booking_time,
-  '',
-  'Aguardo a confirmação. Obrigada!'
-].join('\n');
+      'Olá! Gostaria de confirmar meu agendamento na Ventura Beauty Studio.',
+      '',
+      'Nome: ' + payload.customer_name,
+      'Serviços: ' + payload.service_name,
+      'Valor total: R$ ' + Number(payload.price).toFixed(2).replace('.', ','),
+      'Data: ' + payload.booking_date,
+      'Horário: ' + payload.booking_time,
+      '',
+      'Aguardo a confirmação. Obrigada!'
+    ].join('\n');
 
-const whatsappURL =
-  'https://wa.me/5566992923000?text=' +
-  encodeURIComponent(message);
+    const whatsappURL =
+      'https://wa.me/5566992923000?text=' +
+      encodeURIComponent(message);
 
-window.location.assign(whatsappURL);
-    });
+    window.location.assign(whatsappURL);
+  });
+
+  // LOGIN ADMINISTRATIVO
   $('#login-form').addEventListener('submit', async e => {
     e.preventDefault();
 
     if (!ready) {
-      feedback('#login-feedback', 'Configure a conexão primeiro.', true);
+      feedback(
+        '#login-feedback',
+        'Configure a conexão primeiro.',
+        true
+      );
       return;
     }
 
@@ -229,8 +255,12 @@ window.location.assign(whatsappURL);
     await showDashboard();
   });
 
+  // ABRIR PAINEL ADMINISTRATIVO
   async function showDashboard() {
-    const { data: { user } } = await client.auth.getUser();
+    const {
+      data: { user }
+    } = await client.auth.getUser();
+
     if (!user) return;
 
     const { data: admin } = await client
@@ -241,11 +271,13 @@ window.location.assign(whatsappURL);
 
     if (!admin) {
       await client.auth.signOut();
+
       feedback(
         '#login-feedback',
         'Esta conta não possui permissão administrativa.',
         true
       );
+
       return;
     }
 
@@ -259,6 +291,7 @@ window.location.assign(whatsappURL);
     ]);
   }
 
+  // CARREGAR AGENDAMENTOS
   async function loadBookings() {
     const host = $('#booking-list');
 
@@ -276,45 +309,102 @@ window.location.assign(whatsappURL);
     }
 
     host.innerHTML = table(
-      ['Cliente', 'Contato', 'Serviços', 'Total', 'Data', 'Hora', 'Status', 'Ação'],
+      [
+        'Cliente',
+        'Contato',
+        'Serviços',
+        'Total',
+        'Data',
+        'Hora',
+        'Status',
+        'Ação'
+      ],
+
       (data || []).map(b => [
         escapeHtml(b.customer_name),
         escapeHtml(b.customer_phone || ''),
         escapeHtml(b.service_name || '—'),
         money(b.service_total),
-        b.booking_date,
-        b.booking_time,
+        escapeHtml(b.booking_date),
+        escapeHtml(b.booking_time),
         `<span class="status">${escapeHtml(b.status)}</span>`,
-        `<button class="small-btn" data-confirm="${b.id}">Confirmar</button>
- <button class="small-btn" data-cancel="${b.id}">Cancelar</button>
- <button class="delete-btn" data-delete="${b.id}" title="Excluir solicitação">×</button>`
+
+        `<button class="small-btn" data-confirm="${escapeHtml(b.id)}">Confirmar</button>
+         <button class="small-btn" data-cancel="${escapeHtml(b.id)}">Cancelar</button>
+         <button class="delete-btn" data-delete="${escapeHtml(b.id)}" title="Excluir solicitação" aria-label="Excluir solicitação">×</button>`
       ])
     );
   }
 
+  // MONTAR TABELAS
   function table(headers, rows) {
     return `
       <table>
         <thead>
-          <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+          <tr>
+            ${headers.map(h => `<th>${h}</th>`).join('')}
+          </tr>
         </thead>
+
         <tbody>
-          ${rows.length
-            ? rows.map(r =>
-                `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`
-              ).join('')
-            : `<tr><td colspan="${headers.length}">Nenhum registro.</td></tr>`
+          ${
+            rows.length
+              ? rows.map(r =>
+                  `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`
+                ).join('')
+              : `<tr><td colspan="${headers.length}">Nenhum registro.</td></tr>`
           }
         </tbody>
       </table>
     `;
   }
 
+  // AÇÕES DOS AGENDAMENTOS: CONFIRMAR, CANCELAR E EXCLUIR
   $('#booking-list').addEventListener('click', async e => {
-    const id = e.target.dataset.confirm || e.target.dataset.cancel;
+    const button = e.target.closest('button');
+
+    if (!button) return;
+
+    const id =
+      button.dataset.delete ||
+      button.dataset.confirm ||
+      button.dataset.cancel;
+
     if (!id) return;
 
-    const status = e.target.dataset.confirm
+    button.disabled = true;
+
+    // EXCLUIR AGENDAMENTO
+    if (button.dataset.delete) {
+      const approved = confirm(
+        'Tem certeza que deseja excluir definitivamente esta solicitação?'
+      );
+
+      if (!approved) {
+        button.disabled = false;
+        return;
+      }
+
+      const { error } = await client
+        .from('bookings')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert(
+          'Não foi possível excluir: ' + error.message
+        );
+
+        button.disabled = false;
+        return;
+      }
+
+      await loadBookings();
+      return;
+    }
+
+    // CONFIRMAR OU CANCELAR
+    const status = button.dataset.confirm
       ? 'confirmed'
       : 'cancelled';
 
@@ -325,12 +415,14 @@ window.location.assign(whatsappURL);
 
     if (error) {
       alert('Erro ao atualizar: ' + error.message);
+      button.disabled = false;
       return;
     }
 
     await loadBookings();
   });
 
+  // CARREGAR SERVIÇOS NO PAINEL
   async function loadAdminServices() {
     const { data, error } = await client
       .from('services')
@@ -341,6 +433,7 @@ window.location.assign(whatsappURL);
 
     $('#admin-service-list').innerHTML = table(
       ['Serviço', 'Preço', 'Ativo'],
+
       (data || []).map(s => [
         escapeHtml(s.name),
         money(s.price),
@@ -349,16 +442,19 @@ window.location.assign(whatsappURL);
     );
   }
 
+  // CADASTRAR SERVIÇO
   $('#service-form').addEventListener('submit', async e => {
     e.preventDefault();
 
     const f = new FormData(e.currentTarget);
 
-    const { error } = await client.from('services').insert({
-      name: f.get('name').trim(),
-      price: Number(f.get('price')),
-      active: true
-    });
+    const { error } = await client
+      .from('services')
+      .insert({
+        name: f.get('name').trim(),
+        price: Number(f.get('price')),
+        active: true
+      });
 
     if (error) {
       alert('Erro ao adicionar serviço: ' + error.message);
@@ -366,10 +462,12 @@ window.location.assign(whatsappURL);
     }
 
     e.currentTarget.reset();
+
     await loadServices();
     await loadAdminServices();
   });
 
+  // CARREGAR VENDAS
   async function loadSales() {
     const { data, error } = await client
       .from('sales')
@@ -384,24 +482,28 @@ window.location.assign(whatsappURL);
 
     $('#sales-list').innerHTML = table(
       ['Descrição', 'Valor', 'Data'],
+
       (data || []).map(s => [
         escapeHtml(s.description),
         money(s.amount),
-        s.sale_date
+        escapeHtml(s.sale_date)
       ])
     );
   }
 
+  // CADASTRAR VENDA
   $('#sale-form').addEventListener('submit', async e => {
     e.preventDefault();
 
     const f = new FormData(e.currentTarget);
 
-    const { error } = await client.from('sales').insert({
-      description: f.get('description').trim(),
-      amount: Number(f.get('amount')),
-      sale_date: f.get('sale_date')
-    });
+    const { error } = await client
+      .from('sales')
+      .insert({
+        description: f.get('description').trim(),
+        amount: Number(f.get('amount')),
+        sale_date: f.get('sale_date')
+      });
 
     if (error) {
       alert('Erro ao salvar venda: ' + error.message);
@@ -409,17 +511,25 @@ window.location.assign(whatsappURL);
     }
 
     e.currentTarget.reset();
+
     await loadSales();
   });
 
-  $('#refresh-bookings').addEventListener('click', loadBookings);
+  // ATUALIZAR AGENDAMENTOS
+  $('#refresh-bookings').addEventListener(
+    'click',
+    loadBookings
+  );
 
+  // SAIR DO PAINEL
   $('#logout').addEventListener('click', async () => {
     await client.auth.signOut();
+
     $('#dashboard').classList.add('hidden');
     $('#login-panel').classList.remove('hidden');
   });
 
+  // NAVEGAÇÃO DAS ABAS
   document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(x =>
@@ -432,10 +542,14 @@ window.location.assign(whatsappURL);
     });
   });
 
+  // INICIALIZAÇÃO
   if (ready) {
     loadServices();
+
     client.auth.getSession().then(({ data }) => {
-      if (data.session) showDashboard();
+      if (data.session) {
+        showDashboard();
+      }
     });
   } else {
     loadServices();
