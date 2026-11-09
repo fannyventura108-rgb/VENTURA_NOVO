@@ -286,7 +286,8 @@ window.location.assign(whatsappURL);
         b.booking_time,
         `<span class="status">${escapeHtml(b.status)}</span>`,
         `<button class="small-btn" data-confirm="${b.id}">Confirmar</button>
-         <button class="small-btn" data-cancel="${b.id}">Cancelar</button>`
+ <button class="small-btn" data-cancel="${b.id}">Cancelar</button>
+ <button class="delete-btn" data-delete="${b.id}" title="Excluir solicitação">×</button>`
       ])
     );
   }
