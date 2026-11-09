@@ -200,15 +200,8 @@ const whatsappURL =
   'https://wa.me/5566992923000?text=' +
   encodeURIComponent(message);
 
-window.location.href = whatsappURL;
-    updateBookingTotal();
-
-    feedback(
-      '#booking-feedback',
-      'Solicitação enviada! Aguarde a confirmação pelo WhatsApp.'
-    );
-  });
-
+window.location.assign(whatsappURL);
+    });
   $('#login-form').addEventListener('submit', async e => {
     e.preventDefault();
 
