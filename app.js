@@ -184,7 +184,23 @@
       return;
     }
 
-    form.reset();
+    const message = [
+  'Olá! Gostaria de confirmar meu agendamento na Ventura Beauty Studio.',
+  '',
+  'Nome: ' + payload.customer_name,
+  'Serviços: ' + payload.service_name,
+  'Valor total: R$ ' + Number(payload.price).toFixed(2).replace('.', ','),
+  'Data: ' + payload.booking_date,
+  'Horário: ' + payload.booking_time,
+  '',
+  'Aguardo a confirmação. Obrigada!'
+].join('\n');
+
+const whatsappURL =
+  'https://wa.me/5566992923000?text=' +
+  encodeURIComponent(message);
+
+window.location.href = whatsappURL;
     updateBookingTotal();
 
     feedback(
