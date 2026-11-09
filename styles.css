@@ -552,3 +552,82 @@ footer {
     font-size: 36px;
   }
 }
+/* VENTURA - AJUSTE RESPONSIVO */
+html {
+  width: 100%;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+input,
+select,
+textarea,
+button {
+  font-size: 16px;
+  max-width: 100%;
+}
+
+@media (max-width: 700px) {
+  .topbar {
+    width: 100%;
+    padding: 14px 16px;
+  }
+
+  nav {
+    max-width: 100%;
+    gap: 14px;
+  }
+
+  .hero {
+    width: 100%;
+    min-height: 420px;
+    padding: 55px 22px;
+  }
+
+  .hero h1 {
+    font-size: clamp(42px, 11vw, 58px);
+  }
+
+  .section {
+    width: 100%;
+    padding: 48px 16px;
+  }
+
+  .section-heading h2 {
+    font-size: 34px;
+  }
+
+  .service-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .form-card {
+    width: 100%;
+    padding: 18px;
+  }
+
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .inline-form {
+    flex-direction: column;
+  }
+
+  footer {
+    padding: 24px 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+}
