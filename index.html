@@ -39,7 +39,11 @@
       <form id="booking-form" class="form-card">
         <label>Nome completo<input name="customer_name" required maxlength="100" placeholder="Seu nome"></label>
         <label>WhatsApp<input name="customer_phone" required maxlength="20" placeholder="(66) 99999-9999"></label>
-        <label>Serviço<select name="service_id" id="booking-service" required><option value="">Selecione um serviço</option></select></label>
+       <div class="service-selection">
+  <label>Escolha os serviços desejados</label>
+  <div id="booking-services"></div>
+  <p>Total: <strong id="booking-total">R$ 0,00</strong></p>
+</div>
         <div class="form-row">
           <label>Data desejada<input type="date" name="booking_date" required></label>
           <label>Horário desejado<input type="time" name="booking_time" required></label>
