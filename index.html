@@ -9,6 +9,12 @@
 
   <title>Ventura Beauty Studio</title>
 
+  <!-- ÍCONE DO APLICATIVO -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <!-- ESTILOS -->
   <link rel="stylesheet" href="styles.css">
 
   <script>
@@ -23,6 +29,7 @@
     });
   </script>
 
+  <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
@@ -66,7 +73,7 @@
       </div>
     </section>
 
-    <!-- CONTAINER OCULTO PARA COMPATIBILIDADE COM APP.JS -->
+    <!-- CONTAINER PARA COMPATIBILIDADE COM APP.JS -->
 
     <div id="service-list" class="hidden" aria-hidden="true"></div>
 
