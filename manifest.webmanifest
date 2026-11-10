@@ -1,9 +1,18 @@
+
 {
   "name": "VENTURA 2.0",
   "short_name": "Ventura",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#101010",
   "theme_color": "#101010",
-  "icons": [{"src":"assets/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
