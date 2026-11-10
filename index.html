@@ -9,6 +9,53 @@
   <title>Ventura Beauty Studio</title>
   <link rel="stylesheet" href="styles.css">
 
+  <style>
+    /* Administração abre somente ao tocar no botão superior */
+    #admin {
+      display: none;
+    }
+
+    #admin:target {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      width: 100%;
+      height: 100vh;
+      max-width: none;
+      margin: 0;
+      padding: 25px 16px 50px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, .97);
+    }
+
+    #admin:target .admin-window {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .admin-close-area {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .admin-close {
+      display: inline-block;
+      padding: 9px 18px;
+      color: #c9a45c;
+      border: 1px solid #c9a45c;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .admin-close:hover {
+      background: rgba(201, 164, 92, .15);
+    }
+  </style>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
@@ -63,20 +110,12 @@
       <form id="booking-form" class="form-card">
 
         <label>Seu nome</label>
-        <input
-          type="text"
-          name="customer_name"
-          placeholder="Digite seu nome"
-          required
-        >
+        <input type="text" name="customer_name"
+          placeholder="Digite seu nome" required>
 
         <label>Seu WhatsApp</label>
-        <input
-          type="tel"
-          name="customer_phone"
-          placeholder="(66) 99999-9999"
-          required
-        >
+        <input type="tel" name="customer_phone"
+          placeholder="(66) 99999-9999" required>
 
         <label>Escolha os serviços</label>
         <div id="booking-services" class="booking-services">
@@ -95,11 +134,9 @@
         <input type="time" name="booking_time" required>
 
         <label>Observações</label>
-        <textarea
-          name="notes"
+        <textarea name="notes"
           placeholder="Se desejar, escreva alguma observação."
-          rows="3"
-        ></textarea>
+          rows="3"></textarea>
 
         <button class="gold-button" type="submit">
           ENVIAR SOLICITAÇÃO
@@ -113,137 +150,130 @@
       </form>
     </section>
 
+    <!-- ÁREA ADMINISTRATIVA: abre pelo botão superior -->
+
     <section class="section admin-section" id="admin">
-      <div class="section-heading">
-        <p class="eyebrow">ÁREA RESTRITA</p>
-        <h2>Administração</h2>
-        <p>Acesso exclusivo do administrador.</p>
-      </div>
 
-      <div id="login-panel" class="form-card admin-card">
-        <h3>Acesso administrativo</h3>
+      <div class="admin-window">
 
-        <form id="login-form">
-          <label>E-mail</label>
-          <input
-            type="email"
-            name="email"
-            placeholder="Seu e-mail"
-            required
-          >
-
-          <label>Senha</label>
-          <input
-            type="password"
-            name="password"
-            placeholder="Sua senha"
-            required
-          >
-
-          <button class="gold-button" type="submit">
-            ENTRAR
-          </button>
-
-          <p id="login-feedback" class="feedback"></p>
-        </form>
-      </div>
-
-      <div id="dashboard" class="dashboard hidden">
-
-        <div class="admin-header">
-          <h3>Painel administrativo</h3>
-          <button type="button" id="logout" class="outline-button">
-            Sair
-          </button>
+        <div class="admin-close-area">
+          <a href="#inicio" class="admin-close">FECHAR ✕</a>
         </div>
 
-        <div class="admin-tabs">
-          <button type="button" class="tab active" data-tab="appointments">
-            Agendamentos
-          </button>
-          <button type="button" class="tab" data-tab="services-admin">
-            Serviços
-          </button>
-          <button type="button" class="tab" data-tab="sales">
-            Vendas
-          </button>
+        <div class="section-heading">
+          <p class="eyebrow">ÁREA RESTRITA</p>
+          <h2>Administração</h2>
+          <p>Acesso exclusivo do administrador.</p>
         </div>
 
-        <div id="appointments" class="tab-panel">
-          <div class="panel-heading">
-            <h3>Solicitações de agendamento</h3>
-            <button type="button" id="refresh-bookings" class="outline-button">
-              Atualizar
+        <div id="login-panel" class="form-card admin-card">
+          <h3>Acesso administrativo</h3>
+
+          <form id="login-form">
+            <label>E-mail</label>
+            <input type="email" name="email"
+              placeholder="Seu e-mail" required>
+
+            <label>Senha</label>
+            <input type="password" name="password"
+              placeholder="Sua senha" required>
+
+            <button class="gold-button" type="submit">
+              ENTRAR
+            </button>
+
+            <p id="login-feedback" class="feedback"></p>
+          </form>
+        </div>
+
+        <div id="dashboard" class="dashboard hidden">
+
+          <div class="admin-header">
+            <h3>Painel administrativo</h3>
+            <button type="button" id="logout"
+              class="outline-button">
+              Sair
             </button>
           </div>
-          <div id="booking-list" class="table-container"></div>
-        </div>
 
-        <div id="services-admin" class="tab-panel hidden">
-          <h3>Gerenciar serviços</h3>
-
-          <form id="service-form" class="admin-form">
-            <label>Nome do serviço</label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Nome do serviço"
-              required
-            >
-
-            <label>Preço (R$)</label>
-            <input
-              type="number"
-              name="price"
-              min="0"
-              step="0.01"
-              placeholder="100.00"
-              required
-            >
-
-            <button class="gold-button" type="submit">
-              ADICIONAR SERVIÇO
+          <div class="admin-tabs">
+            <button type="button" class="tab active"
+              data-tab="appointments">
+              Agendamentos
             </button>
 
-            <p id="service-feedback" class="feedback"></p>
-          </form>
-
-          <div id="admin-service-list" class="table-container"></div>
-        </div>
-
-        <div id="sales" class="tab-panel hidden">
-          <h3>Registrar venda</h3>
-
-          <form id="sale-form" class="admin-form">
-            <label>Descrição</label>
-            <input
-              type="text"
-              name="description"
-              placeholder="Descrição da venda"
-              required
-            >
-
-            <label>Valor (R$)</label>
-            <input
-              type="number"
-              name="amount"
-              min="0.01"
-              step="0.01"
-              placeholder="100.00"
-              required
-            >
-
-            <label>Data</label>
-            <input type="date" name="sale_date" required>
-
-            <button class="gold-button" type="submit">
-              SALVAR VENDA
+            <button type="button" class="tab"
+              data-tab="services-admin">
+              Serviços
             </button>
-          </form>
 
-          <div id="sales-list" class="table-container"></div>
+            <button type="button" class="tab"
+              data-tab="sales">
+              Vendas
+            </button>
+          </div>
+
+          <div id="appointments" class="tab-panel">
+            <div class="panel-heading">
+              <h3>Solicitações de agendamento</h3>
+              <button type="button" id="refresh-bookings"
+                class="outline-button">
+                Atualizar
+              </button>
+            </div>
+
+            <div id="booking-list" class="table-container"></div>
+          </div>
+
+          <div id="services-admin" class="tab-panel hidden">
+            <h3>Gerenciar serviços</h3>
+
+            <form id="service-form" class="admin-form">
+              <label>Nome do serviço</label>
+              <input type="text" name="name"
+                placeholder="Nome do serviço" required>
+
+              <label>Preço (R$)</label>
+              <input type="number" name="price"
+                min="0" step="0.01"
+                placeholder="100.00" required>
+
+              <button class="gold-button" type="submit">
+                ADICIONAR SERVIÇO
+              </button>
+
+              <p id="service-feedback" class="feedback"></p>
+            </form>
+
+            <div id="admin-service-list"
+              class="table-container"></div>
+          </div>
+
+          <div id="sales" class="tab-panel hidden">
+            <h3>Registrar venda</h3>
+
+            <form id="sale-form" class="admin-form">
+              <label>Descrição</label>
+              <input type="text" name="description"
+                placeholder="Descrição da venda" required>
+
+              <label>Valor (R$)</label>
+              <input type="number" name="amount"
+                min="0.01" step="0.01"
+                placeholder="100.00" required>
+
+              <label>Data</label>
+              <input type="date" name="sale_date" required>
+
+              <button class="gold-button" type="submit">
+                SALVAR VENDA
+              </button>
+            </form>
+
+            <div id="sales-list" class="table-container"></div>
+          </div>
+
         </div>
-
       </div>
     </section>
 
